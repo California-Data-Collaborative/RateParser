@@ -23,16 +23,17 @@ rate_structure:
           6"     : 475.14
           8"     : 683.65
           10"    : 1101.82
-    - tiers:
-      - 0       : 1.49
-      - indoor  : 1.70
-      - 100%    : 2.62
-      - 125%    : 4.38
-      - 150%    : 9.17
+    - tier_starts:
+      - 0
+      - indoor
+      - 100%
+      - 125%
+      - 150%
     - tier_prices:
       - 1.49
       - 1.70
       - 2.62
       - 4.38
       - 9.17
-    - bill: "variable+service_charge"
+    - commodity_charge: 2.3*usage_ccf
+    - bill: "commodity_charge+service_charge"

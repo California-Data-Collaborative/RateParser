@@ -4,6 +4,9 @@ library(yaml)
 mnwd <- readChar("mnwd.owrs", file.info("mnwd.owrs")$size)
 mnwdList <- yaml.load(mnwd)
 
+# yaml_chars <- as.yaml(mnwdList)
+# writeChar(yaml_chars, "out_test.owrs")
+
 load(file="data/santamonica.rda")
 df_mnwd <- read.csv("../RateComparison/data/mnwd_test.csv", stringsAsFactors = FALSE)
 names(df_mnwd) <- c( "cust_id", "usage_month", "usage_year", "usage_date", "usage_ccf",
@@ -11,19 +14,19 @@ names(df_mnwd) <- c( "cust_id", "usage_month", "usage_year", "usage_date", "usag
 
 
 calculate_bill <- function(df, rate_structure){
-  browser()
   class_rate <- rate_structure[[df$cust_class[1]]]
 
   for(i in 1:length(class_rate)){
     rate_part <- class_rate[[i]]
     name <- names(rate_part)
 
-    if( is_map(rate_part[[1]]) ){
+    if( is_map(rate_part[[name]]) ){
       df[[name]] <- eval_map(df, rate_part)
+    }else if(length(rate_part[[name]]) > 1){# if rate part is tiers
+      df[[name]] <- paste(rate_part[[name]], collapse="\n")
     }else{
       df[[name]] <- eval_field_or_formula(df, rate_part)
     }
-    browser()
   }
 
   return(df)
@@ -31,15 +34,40 @@ calculate_bill <- function(df, rate_structure){
 
 eval_field_or_formula <- function(df, rate_part){
   name <- names(rate_part)
+  browser()
+#   if(name == "bill"){
+#
+#   }else{
   return(eval(parse(text=rate_part[[name]]), df))
+  # }
+}
+
+collapse_tiers <- function(map){
+  # if dealing with mapped tiers
+  # ASSERTION, only tiers that depend on data values should be depth > 1
+  if(depth(map) > 1){
+    collapsed <- lapply(map, FUN=paste, collapse="\n")
+  }else{
+    collapsed <- map
+  }
+
+  return(collapsed)
 }
 
 eval_map <- function(df, rate_part){
+  browser()
   name <- names(rate_part)
-  depends_col <- rate_part[[name]]$depends_on
-  pricemap <- rate_part[[name]]$values
+  # append the column names together
+  # depends_col <- paste(rate_part[[name]]$depends_on, collapse="|")
 
-  return(pricemap[[df[[depends_col]]]])
+  # Appened together each element in the dependency columns
+  keys <- do.call(paste, c(df[rate_part[[name]]$depends_on], sep = "|"))
+
+  # Get the value mapping, and flatten together in the case of tiers
+  pricemap <- rate_part[[name]]$values
+  pricemap <- collapse_tiers(pricemap)
+
+  return( unname(unlist(pricemap)[keys]) )
 }
 
 # check whether the
@@ -57,6 +85,14 @@ is_map <- function(rate_part){
   }
 }
 
+depth <- function(this,thisdepth=0){
+  if(!is.list(this)){
+    return(thisdepth)
+  }else{
+    return(max(unlist(lapply(this,depth,thisdepth=thisdepth+1))))
+  }
+}
+
 
 # df_row <- tbl_df(santamonica)[2,]
 df_row <- tbl_df(df_mnwd) %>% filter(cust_class=="RESIDENTIAL_SINGLE")
@@ -69,7 +105,7 @@ df_row$hhsize <- 4
 df_row$ET <- 2.3
 
 
-calculate_bill(df_row, mnwdList$rate_structure)
+df_calced <- calculate_bill(df_row, mnwdList$rate_structure)
 
 
 tbl_df(santamonica)[1:10,] %>% rowwise() %>% do(calculate_bill(.,mnwdList$rate_structure))
