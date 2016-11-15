@@ -1,13 +1,18 @@
 Package: RateParser
 Type: Package
-Title: Parse a Water Rate Structure Specified in OWRS Format
+Title: Calculate Water Bills from an OWRS File
 Version: 0.1
 Date: 2016-10-28
 Author: Christopher Tull
 Maintainer: Christopher Tull <chris@argolabs.org>
 Description: RateParser is designed to parse a machine-readable water rate
   structure written using the Open Water Rate Specification (OWRS). In addition
-  to parsing the rate structure, this package can also apply the rate structure
+  to parsing the rate structure, this package will also apply the rate structure
   to properly formatted meter read data in order to calculate water bills.
 License: MIT
 LazyData: TRUE
+Imports:
+  dplyr,
+  yaml
+Suggests:
+  testthat
