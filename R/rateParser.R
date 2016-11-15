@@ -8,13 +8,16 @@ mnwdList <- yaml.load(mnwd)
 # writeChar(yaml_chars, "out_test.owrs")
 # load(file="data/santamonica.rda")
 
-# df_mnwd <- read.csv("../RateComparison/data/mnwd_test.csv", stringsAsFactors = FALSE)
-# names(df_mnwd) <- c( "cust_id", "usage_month", "usage_year", "usage_date", "usage_ccf",
-#                      "ET", "hhsize", "irr_area", "cust_class", "rate_code")
+df_mnwd <- read.csv("../RateComparison/data/mnwd_test.csv", stringsAsFactors = FALSE)
+names(df_mnwd) <- c( "cust_id", "usage_month", "usage_year", "usage_date", "usage_ccf",
+                     "ET", "hhsize", "irr_area", "cust_class", "rate_code")
 
 
 calculate_bill <- function(df, rate_structure){
   class_rate <- rate_structure[[df$cust_class[1]]]
+  stopif(is.null(class_rate), paste("No rate information for customer class ", df$cust_class[1],
+                                    " is present in rate file.") )
+
   for(i in 1:length(class_rate)){
     rate_part <- class_rate[[i]]
     name <- names(rate_part)
@@ -49,7 +52,7 @@ eval_field_or_formula <- function(df, rate_part){
 collapse_tiers <- function(map){
   # if dealing with mapped tiers
   # ASSERTION, only tiers that depend on data values should be depth > 1
-  if(depth(map) > 1){
+  if(length(map[[1]]) > 1){
     collapsed <- lapply(map, FUN=paste, collapse="\n")
   }else{
     collapsed <- map
@@ -62,6 +65,10 @@ eval_map <- function(df, rate_part){
   name <- names(rate_part)
   # append the column names together
   # depends_col <- paste(rate_part[[name]]$depends_on, collapse="|")
+
+  check <- !all(rate_part[[name]]$depends_on %in% names(df))
+  stopif( check, paste0("\nOne of the fields (", rate_part[[name]]$depends_on, ") is not present.",
+                        " It can be defined either in the data or in the rate file.") )
 
   # Appened together each element in the dependency columns
   keys <- do.call(paste, c(df[rate_part[[name]]$depends_on], sep = "|"))
@@ -105,11 +112,21 @@ depth <- function(this,thisdepth=0){
   }
 }
 
+stopif <- function(bool, message){
+  if(bool){
+    stop(message)
+  }
+}
+
 
 # df_row <- tbl_df(santamonica)[2,]
-df_row <- tbl_df(df_mnwd) %>% filter(cust_class=="RESIDENTIAL_SINGLE")
+# df_row <- tbl_df(df_mnwd) %>% filter(cust_class=="RESIDENTIAL_SINGLE")
+df_row <- tbl_df(df_mnwd) %>%
+            filter(cust_class %in% c("IRRIGATION", "RESIDENTIAL_SINGLE", "RESIDENTIAL_MULTI") ) %>%
+            group_by(cust_class)
 df_row$days_in_period <- 30.4
 df_row$meter_size <- '5/8"'
+df_row$water_type <- 'POTABLE'
 
 
 # df_row$irr_area <- 1300
@@ -120,4 +137,4 @@ df_row$meter_size <- '5/8"'
 # df_calced <- calculate_bill(df_row, mnwdList$rate_structure)
 
 
-# tbl_df(santamonica)[1:10,] %>% rowwise() %>% do(calculate_bill(.,mnwdList$rate_structure))
+df_calced <- df_row %>% group_by(cust_class) %>% do(calculate_bill(., mnwdList$rate_structure))
