@@ -2,3 +2,8 @@
 
 export(calculate_bill)
 export(read_owrs_file)
+importFrom(dplyr,"%>%")
+importFrom(dplyr,bind_cols)
+importFrom(dplyr,do)
+importFrom(dplyr,group_by)
+importFrom(dplyr,tbl_df)

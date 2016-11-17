@@ -19,10 +19,13 @@
 #' NOTE: rows are not guarenteed to be in the same order as originally passed,
 #' and will likely be in a different order
 #'
+#' @importFrom dplyr %>% tbl_df group_by do bind_cols
 #' @export
 calculate_bill <- function(df, parsed_rate){
   rate_structure <- parsed_rate$rate_structure
-  df <- tbl_df(df) %>% mutate_if(is.factor, as.character)
+  df <- tbl_df(df)
+  i <- sapply(df, is.factor)
+  df[i] <- lapply(df[i], as.character)
 
   class_rate <- rate_structure[[df$cust_class[1]]]
   stopif(is.null(class_rate), paste("No rate information for customer class ", df$cust_class[1],
@@ -71,7 +74,7 @@ calculate_bill <- function(df, parsed_rate){
 #' @export
 read_owrs_file <- function(filepath){
   raw_yaml <- readChar(filepath, file.info(filepath)$size)
-  parsed_yaml <- yaml.load(raw_yaml)
+  parsed_yaml <- yaml::yaml.load(raw_yaml)
   return( parsed_yaml )
 }
 

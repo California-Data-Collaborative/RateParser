@@ -67,7 +67,7 @@ get_usage_in_tiers <- function(data, tier_starts, budget_based=FALSE){
   for(i in 1:(num_tiers-1) ){
     # tier_stars is a matrix if budget, else is a vector
     if(budget_based){
-      t <- tier_starts[,i+1]
+      t <- ceiling( tier_starts[,i+1] )
     }
     else{
       t <- tier_starts[i+1]
@@ -75,12 +75,12 @@ get_usage_in_tiers <- function(data, tier_starts, budget_based=FALSE){
 
     if(i==1){
       # Usage in first tier
-      usage_in_tiers[,i] <- pmax(pmin(data$usage_ccf, t), 0)
+      usage_in_tiers[,i] <- pmax(pmin(data$usage_ccf, t-1), 0)
     }
     else{
       # Usage in middle tiers
       lower_tier_use <- rowSums(usage_in_tiers)
-      usage_in_tiers[,i] <- pmax(pmin(data$usage_ccf-lower_tier_use, t-lower_tier_use), 0)
+      usage_in_tiers[,i] <- pmax(pmin(data$usage_ccf-lower_tier_use, t-lower_tier_use-1), 0)
     }
   }
   # Usage in final tier
