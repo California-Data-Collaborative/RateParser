@@ -4,15 +4,14 @@
 \alias{calculate_bill}
 \title{Calculate water bills.}
 \usage{
-calculate_bill(df, rate_structure)
+calculate_bill(df, parsed_rate)
 }
 \arguments{
 \item{df}{Data frame containing all data values referenced in the rate
 file but not defined in the rate file. E.g. \code{usage_ccf},
 \code{cust_class}, \code{meter_size}, \code{etc.}}
 
-\item{rate_structure}{The rate_structure portion of an
-\href{https://github.com/California-Data-Collaborative/Open-Water-Rate-Specification}{OWRS file},
+\item{parsed_rate}{\href{https://github.com/California-Data-Collaborative/Open-Water-Rate-Specification}{OWRS file},
 parsed into an \code{R} list by the \code{yaml} package.}
 }
 \value{
