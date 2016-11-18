@@ -1,9 +1,9 @@
 
-
 #' Calculate water bills.
 #'
 #' \code{calculate_bill} applies a rate structure to water use data to
-#' calculate water bills.
+#' calculate water bills. Applies \code{calculate_class_bill} to each
+#' \code{cust_class} separately.
 #'
 #' @param df Data frame containing all data values referenced in the rate
 #' file but not defined in the rate file. E.g. \code{usage_ccf},
@@ -22,6 +22,28 @@
 #' @importFrom dplyr %>% tbl_df group_by do bind_cols
 #' @export
 calculate_bill <- function(df, parsed_rate){
+  tmp <- df %>% group_by(cust_class) %>% do(calculate_class_bill(., parsed_rate))
+  return(tmp)
+}
+
+#' Calculate water bills for a single customer class.
+#'
+#' \code{calculate_class_bill} applies a rate structure to water use data to
+#' calculate water bills.
+#'
+#' @param df Data frame containing all data values referenced in the rate
+#' file but not defined in the rate file. E.g. \code{usage_ccf},
+#' \code{cust_class}, \code{meter_size}, \code{etc.}
+#' @param parsed_rate
+#' \href{https://github.com/California-Data-Collaborative/Open-Water-Rate-Specification}{OWRS file},
+#' parsed into an \code{R} list by the \code{yaml} package.
+#'
+#' @return Original data frame with additional columns appended. Additional columns are those
+#' defined in the rate file, as well as columns \code{Xi} representing the usage in the
+#' ith tier, and \code{XRi} representing revenue in the ith tier (where applicable).
+#'
+#' @importFrom dplyr %>% tbl_df group_by do bind_cols
+calculate_class_bill <- function(df, parsed_rate){
   rate_structure <- parsed_rate$rate_structure
   df <- tbl_df(df)
   i <- sapply(df, is.factor)
