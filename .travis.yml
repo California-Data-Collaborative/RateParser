@@ -9,4 +9,9 @@ r:
 
 warnings_are_errors: false
 
+r_github_packages:
+  - hadley/devtools
+
+after_success:
+  - Rscript -e 'covr::codecov()'
 
