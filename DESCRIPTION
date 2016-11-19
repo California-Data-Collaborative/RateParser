@@ -15,4 +15,5 @@ Imports:
   dplyr,
   yaml
 Suggests:
-  testthat
+  testthat,
+  covr
