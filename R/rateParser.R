@@ -182,7 +182,7 @@ eval_map <- function(df, rate_part){
 #'
 #' @return Boolean representing whether the rate part is a map.
 #'
-#' @keywords internal
+#' @export
 is_map <- function(rate_part){
   parts <- names(rate_part)
   has_depends <- "depends_on" %in% parts
