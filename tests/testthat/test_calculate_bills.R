@@ -37,82 +37,82 @@ df_test <- do.call(rbind.data.frame, rows[1:3])
 yaml_rates <- '
 metadata:
   effective_date: 2016-03-01
-  utility_name: "City of Santa Monica"
+  utility_name: "City of Example"
   bill_frequency: bimonthly
 rate_structure:
   RESIDENTIAL_SINGLE:
-    - service_charge:
-        depends_on: meter_size
-        values:
-          5/8": 11
-          1": 22
-          3": 33
-    - tier_starts:
+    service_charge:
+      depends_on: meter_size
+      values:
+        5/8": 11
+        1": 22
+        3": 33
+    tier_starts:
       - 0
       - 15
       - 21
       - 26
-    - tier_prices:
+    tier_prices:
       - 2.87
       - 4.29
       - 6.44
       - 10.07
-    - commodity_charge: Tiered
-    - bill: commodity_charge + service_charge
+    commodity_charge: Tiered
+    bill: commodity_charge + service_charge
   IRRIGATION:
-    - service_charge:
-        depends_on: meter_size
-        values:
-          5/8": 11
-          1": 22
-          3": 33
-    - et_factor: 0.7
-    - outdoor: et_factor * irrigable_area * et_amount * 0.62 * (1/748)
-    - budget: outdoor
-    - tier_starts:
+    service_charge:
+      depends_on: meter_size
+      values:
+        5/8": 11
+        1": 22
+        3": 33
+    et_factor: 0.7
+    outdoor: et_factor * irrigable_area * et_amount * 0.62 * (1/748)
+    budget: outdoor
+    tier_starts:
       - 0
       - outdoor
-    - tier_prices:
-        depends_on: water_type
-        values:
-          POTABLE:
-            - 4.07
-            - 10.03
-          RECYCLED:
-            - 3.66
-            - 6.33
-    - commodity_charge: Budget
-    - bill: commodity_charge + service_charge
+    tier_prices:
+      depends_on: water_type
+      values:
+        POTABLE:
+          - 4.07
+          - 10.03
+        RECYCLED:
+          - 3.66
+          - 6.33
+    commodity_charge: Budget
+    bill: commodity_charge + service_charge
   COMMERCIAL:
-    - service_charge:
-        depends_on: meter_size
-        values:
-          5/8": 11
-          1": 22
-          3": 33
-    - tier_starts:
-        depends_on: meter_size
-        values:
-          5/8":
-            - 0
-            - 211
-          1":
-            - 0
-            - 211
-          3":
-            - 0
-            - 611
-    - tier_prices:
-        depends_on: water_type
-        values:
-          POTABLE:
-            - 4.07
-            - 10.03
-          RECYCLED:
-            - 3.66
-            - 6.33
-    - commodity_charge: Tiered
-    - bill: commodity_charge + service_charge
+    service_charge:
+      depends_on: meter_size
+      values:
+        5/8": 11
+        1": 22
+        3": 33
+    tier_starts:
+      depends_on: meter_size
+      values:
+        5/8":
+          - 0
+          - 211
+        1":
+          - 0
+          - 211
+        3":
+          - 0
+          - 611
+    tier_prices:
+      depends_on: water_type
+      values:
+        POTABLE:
+          - 4.07
+          - 10.03
+        RECYCLED:
+          - 3.66
+          - 6.33
+    commodity_charge: Tiered
+    bill: commodity_charge + service_charge
 '
 test_rates <- yaml.load(yaml_rates)
 
