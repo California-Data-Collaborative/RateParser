@@ -53,24 +53,26 @@ calculate_class_bill <- function(df, parsed_rate){
   stopif(is.null(class_rate), paste("No rate information for customer class ", df$cust_class[1],
                                     " is present in rate file.") )
 
-  for(i in 1:length(class_rate)){
-    rate_part <- class_rate[[i]]
-    name <- names(rate_part)
+  name_list <- names(class_rate)
+  for(i in 1:length(name_list)){
+    name <- name_list[i]
+    rate_part <- class_rate[[name]]
 
-    stopif(!is_valid_rate_part(rate_part),
-           paste("The OWRS file might not be formatted properly. ",
-                 "\nError occured in customer class ", df$cust_class[1],
-                 ", near to: ", paste(name,collapse=" ") )
-    )
 
-    if( is_map(rate_part[[name]]) ){# if rate_part is a map
+#     stopif(!is_valid_rate_part(rate_part),
+#            paste("The OWRS file might not be formatted properly. ",
+#                  "\nError occured in customer class ", df$cust_class[1],
+#                  ", near to: ", paste(name,collapse=" ") )
+#     )
+
+    if( is_map(rate_part) ){# if rate_part is a map
       df[[name]] <- eval_map(df, rate_part)
     }
-    else if(length(rate_part[[name]]) > 1){# if rate_part specifies tiers
-      df[[name]] <- paste(rate_part[[name]], collapse="\n")
+    else if(length(rate_part) > 1){# if rate_part specifies tiers
+      df[[name]] <- paste(rate_part, collapse="\n")
     }
     else if(is_rate_type(rate_part)){
-      rate_type <- rate_part[[name]]
+      rate_type <- rate_part
       variable_bills <- df %>% group_by(tier_starts, tier_prices) %>%
                           do(calculate_variable_bill(., rate_type))
       #rename the column
@@ -114,8 +116,7 @@ read_owrs_file <- function(filepath){
 #'
 #' @keywords internal
 eval_field_or_formula <- function(df, rate_part){
-  name <- names(rate_part)
-  return(eval(parse(text=rate_part[[name]]), df))
+  return(eval(parse(text=rate_part), df))
 }
 
 #' Collapse a multi-level list.
@@ -154,19 +155,19 @@ collapse_tiers <- function(map){
 #'
 #' @keywords internal
 eval_map <- function(df, rate_part){
-  name <- names(rate_part)
+  # name <- names(rate_part)
   # append the column names together
   # depends_col <- paste(rate_part[[name]]$depends_on, collapse="|")
 
-  check <- !all(rate_part[[name]]$depends_on %in% names(df))
-  stopif( check, paste0("One of the fields (", rate_part[[name]]$depends_on, ") is not present.",
+  check <- !all(rate_part$depends_on %in% names(df))
+  stopif( check, paste0("One of the fields (", rate_part$depends_on, ") is not present.",
                         " It can be defined either in the data or in the rate file.") )
 
   # Appened together each element in the dependency columns
-  keys <- do.call(paste, c(df[rate_part[[name]]$depends_on], sep = "|"))
+  keys <- do.call(paste, c(df[rate_part$depends_on], sep = "|"))
 
   # Get the value mapping, and flatten together in the case of tiers
-  pricemap <- rate_part[[name]]$values
+  pricemap <- rate_part$values
   pricemap <- collapse_tiers(pricemap)
 
   return( unname(unlist(pricemap)[keys]) )
@@ -198,8 +199,7 @@ is_map <- function(rate_part){
 }
 
 is_rate_type <- function(rate_part){
-  name <- names(rate_part)
-  if(rate_part[[name]] %in% c("Budget", "Tiered")){
+  if(rate_part %in% c("Budget", "Tiered")){
     return(TRUE)
   }else{
     return(FALSE)
