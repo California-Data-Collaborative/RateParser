@@ -67,7 +67,6 @@ rate_structure:
         1": 22
         3": 33
     et_factor: 0.7
-    outdoor: et_factor * irrigable_area * et_amount * 0.62 * (1/748)
     budget: outdoor
     tier_starts:
       - 0
@@ -83,6 +82,7 @@ rate_structure:
           - 6.33
     commodity_charge: Budget
     bill: commodity_charge + service_charge
+    outdoor: et_factor * irrigable_area * et_amount * 0.62 * (1/748)
   COMMERCIAL:
     service_charge:
       depends_on: meter_size
