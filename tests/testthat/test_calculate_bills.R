@@ -32,6 +32,27 @@ rows[[4]] <- list("usage_ccf"=41,
                   "et_amount"=4.8,
                   "irrigable_area"=4500,
                   "hhsize"=0)
+rows[[5]] <- list("usage_ccf"=388,
+                  "meter_size"='3"',
+                  "cust_class"="ERROR_CLASS1",
+                  "water_type"="POTABLE",
+                  "et_amount"=0,
+                  "irrigable_area"=0,
+                  "hhsize"=0)
+rows[[6]] <- list("usage_ccf"=388,
+                  "meter_size"='3"',
+                  "cust_class"="ERROR_CLASS2",
+                  "water_type"="POTABLE",
+                  "et_amount"=0,
+                  "irrigable_area"=0,
+                  "hhsize"=0)
+rows[[7]] <- list("usage_ccf"=388,
+                  "meter_size"='3"',
+                  "cust_class"="ERROR_CLASS3",
+                  "water_type"="POTABLE",
+                  "et_amount"=0,
+                  "irrigable_area"=0,
+                  "hhsize"=0)
 df_test <- do.call(rbind.data.frame, rows[1:3])
 
 yaml_rates <- '
@@ -113,6 +134,66 @@ rate_structure:
           - 6.33
     commodity_charge: Tiered
     bill: commodity_charge + service_charge
+  ERROR_CLASS1:
+    tier_prices:
+      depends_on: water_type
+      values:
+        POTABLE:
+        - 4.07
+        - 10.03
+        RECYCLED:
+        - 3.66
+        - 6.33
+    commodity_charge: Tiered
+    bill: commodity_charge
+  ERROR_CLASS2:
+      tier_prices:
+        depends_on: water_type
+        values:
+          POTABLE:
+          - 4.07
+          - 10.03
+          RECYCLED:
+          - 3.66
+          - 6.33
+      commodity_charge: Tiered
+      tier_starts:
+        depends_on: meter_size
+        values:
+          5/8":
+            - 0
+            - 211
+          1":
+            - 0
+            - 211
+          3":
+            - 0
+            - 611
+      bill: commodity_charge
+  ERROR_CLASS3:
+    tier_starts:
+      depends_on: meter_size
+      values:
+        5/8":
+        - 0
+        - 211
+        1":
+        - 0
+        - 211
+        3":
+        - 0
+        - 611
+    tier_prices:
+      depends_on: water_type
+      values:
+        POTABLE:
+        - 4.07
+        - 10.03
+        RECYCLED:
+        - 3.66
+        - 6.33
+    commodity_charge: Tiered
+    bill: commodity_charge + service_charge
 '
 test_rates <- yaml.load(yaml_rates)
 
@@ -136,12 +217,24 @@ test_that("Individual bills calculated accurately", {
  expect_equal(calc(as.data.frame(rows[[3]]))$bill, manual_bill_3)
 })
 
+test_that("Bills accurate when summed accross customer classes", {
+  expect_equal( sum(calculate_bill(df_test, test_rates)$bill), sum(manual_bills) )
+})
+
 test_that("Error thrown when a class is not defined in rate file", {
   expect_error(calc(as.data.frame(rows[[4]])), "No rate information for customer class")
 })
 
-test_that("Bills accurate when summed accross customer classes", {
-  expect_equal( sum(calculate_bill(df_test, test_rates)$bill), sum(manual_bills) )
+test_that("Error thrown when tier starts or prices are not present in a tiered rate structure", {
+  expect_error(calc(as.data.frame(rows[[5]])), "Either tier_starts or tier_prices is not present in the")
+})
+
+test_that("Error thrown when tier starts or prices appear after commodity_charge", {
+  expect_error(calc(as.data.frame(rows[[6]])), "or they could appear afterwards.")
+})
+
+test_that("Error thrown when a field is missing", {
+  expect_error(calc(as.data.frame(rows[[7]])), "is not present in the OWRS file for customer class")
 })
 
 

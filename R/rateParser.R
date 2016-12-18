@@ -62,7 +62,7 @@ calculate_class_bill <- function(df, parsed_rate){
 
     #if the field has not already been evaluated
     if(!(name %in% names(df))){
-      df <- add_rate_part_to_frame(df, name, name_list, class_rate)
+      df <- add_rate_part_to_frame(df, name, name_list, class_rate, df$cust_class[1])
     }
 
   }
@@ -71,7 +71,7 @@ calculate_class_bill <- function(df, parsed_rate){
 }
 
 
-add_rate_part_to_frame <- function(df, name, name_list, class_rate){
+add_rate_part_to_frame <- function(df, name, name_list, class_rate, cust_class){
   rate_part <- class_rate[[name]]
 
   #     stopif(!is_valid_rate_part(rate_part),
@@ -89,6 +89,11 @@ add_rate_part_to_frame <- function(df, name, name_list, class_rate){
       df[[name]] <- paste(rate_part, collapse="\n")
     }
     else if(is_rate_type(rate_part)){
+
+      stopif(!(("tier_starts" %in% names(df))&&("tier_prices" %in% names(df))),
+             paste0("Either tier_starts or tier_prices is not present in the ", cust_class,
+                    " rate structure, or they could appear afterwards."))
+
       rate_type <- rate_part
       variable_bills <- df %>% group_by(tier_starts, tier_prices) %>%
         do(calculate_variable_bill(., rate_type))
@@ -112,12 +117,13 @@ add_rate_part_to_frame <- function(df, name, name_list, class_rate){
       if(field_not_found %in% names(name_list)){
 
         #recursive call to evaluate missing sub-field
-        df <- add_rate_part_to_frame(df, field_not_found, name_list, class_rate)
+        df <- add_rate_part_to_frame(df, field_not_found, name_list, class_rate, cust_class)
       }else{
         #the field is not present at all
         stop(paste0("The field ",
                     field_not_found,
-                    " is not present in the OWRS file for one or more customer classes.")
+                    " is not present in the OWRS file for customer class ",
+                    cust_class)
              )
       }
 
@@ -132,7 +138,7 @@ add_rate_part_to_frame <- function(df, name, name_list, class_rate){
   #if the field has not already been evaluated,
   # go back and evaluate the original now that the subfield(s) have been handled.
   if(!(name %in% names(df))){
-    df <- add_rate_part_to_frame(df, name, name_list, class_rate)
+    df <- add_rate_part_to_frame(df, name, name_list, class_rate, cust_class)
   }
 
   return(df)
