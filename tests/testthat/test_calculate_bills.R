@@ -53,6 +53,13 @@ rows[[7]] <- list("usage_ccf"=388,
                   "et_amount"=0,
                   "irrigable_area"=0,
                   "hhsize"=0)
+rows[[8]] <- list("usage_ccf"=27.3,
+                  "meter_size"='5/8"',
+                  "cust_class"="RESIDENTIAL_BUDGETBASED",
+                  "water_type"="POTABLE",
+                  "et_amount"=4.8,
+                  "irrigable_area"=1300,
+                  "hhsize"=3)
 df_test <- do.call(rbind.data.frame, rows[1:3])
 
 yaml_rates <- '
@@ -73,6 +80,31 @@ rate_structure:
       - 15
       - 21
       - 26
+    tier_prices:
+      - 2.87
+      - 4.29
+      - 6.44
+      - 10.07
+    commodity_charge: Tiered
+    bill: commodity_charge + service_charge
+  RESIDENTIAL_BUDGETBASED:
+    service_charge:
+      depends_on: meter_size
+      values:
+        5/8": 11
+        1": 22
+        3": 33
+    gpcd: 60
+    landscape_factor: 0.7
+    days_in_period: 30.4
+    indoor: "gpcd*hhsize*days_in_period*(1/748)"
+    outdoor: "landscape_factor*et_amount*irrigable_area*0.62*(1/748)"
+    budget: "indoor+outdoor"
+    tier_starts:
+      - 0
+      - indoor
+      - 100%
+      - 125%
     tier_prices:
       - 2.87
       - 4.29
@@ -208,6 +240,13 @@ manual_bill_2 <- 11 + 2.87*14 + 4.29*6 + 6.44*5 + 10.07*2.3
 manual_budget_3 <- 0.7*4.8*4500*0.62*(1/748)
 manual_bill_3 <- 22 + 3.66*floor(manual_budget_3) + 6.33*(41 - floor(manual_budget_3) )
 
+# manual_indoor_8 <- 60*3*30.4*(1/748)
+# manual_outdoor_8 <- 0.7 * 1300 * 4.8 * 0.62 * (1/748)
+# manual_budget_8 <- manual_indoor_8 + manual_outdoor_8
+# manual_bill_8 <- 11 + 2.87*floor(manual_indoor) +
+#                   4.29*floor(manual_outdoor) +
+#                   6.44*floor(1.25*manual_budget_8 - manual_budget_8) + 10.07*(27.3-1.25*manual_budget_8)
+
 manual_bills <- c(manual_bill_1, manual_bill_2, manual_bill_3)
 
 
@@ -215,6 +254,7 @@ test_that("Individual bills calculated accurately", {
  expect_equal(calc(as.data.frame(rows[[1]]))$bill, manual_bill_1)
  expect_equal(calc(as.data.frame(rows[[2]]))$bill, manual_bill_2)
  expect_equal(calc(as.data.frame(rows[[3]]))$bill, manual_bill_3)
+ # expect_equal(calc(as.data.frame(rows[[8]]))$bill, manual_bill_8)
 })
 
 test_that("Bills accurate when summed accross customer classes", {
