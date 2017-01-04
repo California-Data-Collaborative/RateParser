@@ -86,7 +86,14 @@ rate_structure:
       - 6.44
       - 10.07
     commodity_charge: Tiered
-    bill: commodity_charge + service_charge
+    sewer_tier_starts:
+      - 0
+      - 11
+    sewer_charge: Tiered
+    sewer_tier_prices:
+      - 2
+      - 0
+    bill: commodity_charge + service_charge + sewer_charge
   RESIDENTIAL_BUDGETBASED:
     service_charge:
       depends_on: meter_size
@@ -120,9 +127,7 @@ rate_structure:
         1": 22
         3": 33
     budget: outdoor
-    tier_starts:
-      - 0
-      - outdoor
+    commodity_charge: Budget
     tier_prices:
       depends_on: water_type
       values:
@@ -132,10 +137,13 @@ rate_structure:
         RECYCLED:
           - 3.66
           - 6.33
-    commodity_charge: Budget
-    bill: commodity_charge + service_charge
+    tier_starts:
+      - 0
+      - outdoor
+    bill: commodity_charge + service_charge + sewer_charge
     outdoor: et_factor * irrigable_area * et_amount * 0.62 * (1/748)
     et_factor: 0.7
+    sewer_charge: 1.5*usage_ccf
   COMMERCIAL:
     service_charge:
       depends_on: meter_size
@@ -165,7 +173,15 @@ rate_structure:
           - 3.66
           - 6.33
     commodity_charge: Tiered
-    bill: commodity_charge + service_charge
+    sewer_budget: 10
+    sewer_tier_starts:
+      - 0
+      - 101%
+    sewer_tier_prices:
+      - 2
+      - 0
+    sewer_charge: Budget
+    bill: commodity_charge + service_charge + sewer_charge
   ERROR_CLASS1:
     tier_prices:
       depends_on: water_type
@@ -234,11 +250,11 @@ calc <- function(df){
   calculate_class_bill(df, test_rates)
 }
 
-manual_bill_1 <- 33 + 4.07*388
-manual_bill_2 <- 11 + 2.87*14 + 4.29*6 + 6.44*5 + 10.07*2.3
+manual_bill_1 <- 33 + (4.07*388) + (2*10 + 0*378)
+manual_bill_2 <- 11 + (2.87*14 + 4.29*6 + 6.44*5 + 10.07*2.3) + (2*10 + 0*17.3)
 
 manual_budget_3 <- 0.7*4.8*4500*0.62*(1/748)
-manual_bill_3 <- 22 + 3.66*floor(manual_budget_3) + 6.33*(41 - floor(manual_budget_3) )
+manual_bill_3 <- 22 + 3.66*floor(manual_budget_3) + 6.33*(41 - floor(manual_budget_3) ) + 1.5*41
 
 # manual_indoor_8 <- 60*3*30.4*(1/748)
 # manual_outdoor_8 <- 0.7 * 1300 * 4.8 * 0.62 * (1/748)
@@ -266,11 +282,7 @@ test_that("Error thrown when a class is not defined in rate file", {
 })
 
 test_that("Error thrown when tier starts or prices are not present in a tiered rate structure", {
-  expect_error(calc(as.data.frame(rows[[5]])), "Either tier_starts or tier_prices is not present in the")
-})
-
-test_that("Error thrown when tier starts or prices appear after commodity_charge", {
-  expect_error(calc(as.data.frame(rows[[6]])), "or they could appear afterwards.")
+  expect_error(calc(as.data.frame(rows[[5]])), "is not present in the OWRS file for customer class")
 })
 
 test_that("Error thrown when a field is missing", {
