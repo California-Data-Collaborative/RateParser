@@ -140,9 +140,10 @@ rate_structure:
           - 3.66
           - 6.33
     commodity_charge: Budget
-    bill: commodity_charge + service_charge
+    bill: commodity_charge + service_charge + sewer_charge
     outdoor: et_factor * irrigable_area * et_amount * 0.62 * (1/748)
     et_factor: 0.7
+    sewer_charge: 1.5*usage_ccf
   COMMERCIAL:
     service_charge:
       depends_on: meter_size
@@ -253,7 +254,7 @@ manual_bill_1 <- 33 + (4.07*388) + (2*10 + 0*378)
 manual_bill_2 <- 11 + (2.87*14 + 4.29*6 + 6.44*5 + 10.07*2.3) + (2*10 + 0*17.3)
 
 manual_budget_3 <- 0.7*4.8*4500*0.62*(1/748)
-manual_bill_3 <- 22 + 3.66*floor(manual_budget_3) + 6.33*(41 - floor(manual_budget_3) )
+manual_bill_3 <- 22 + 3.66*floor(manual_budget_3) + 6.33*(41 - floor(manual_budget_3) ) + 1.5*41
 
 # manual_indoor_8 <- 60*3*30.4*(1/748)
 # manual_outdoor_8 <- 0.7 * 1300 * 4.8 * 0.62 * (1/748)
