@@ -86,7 +86,14 @@ rate_structure:
       - 6.44
       - 10.07
     commodity_charge: Tiered
-    bill: commodity_charge + service_charge
+    sewer_tier_starts:
+      - 0
+      - 11
+    sewer_tier_prices:
+      - 2
+      - 0
+    sewer_charge: Tiered
+    bill: commodity_charge + service_charge + sewer_charge
   RESIDENTIAL_BUDGETBASED:
     service_charge:
       depends_on: meter_size
@@ -235,7 +242,7 @@ calc <- function(df){
 }
 
 manual_bill_1 <- 33 + 4.07*388
-manual_bill_2 <- 11 + 2.87*14 + 4.29*6 + 6.44*5 + 10.07*2.3
+manual_bill_2 <- 11 + (2.87*14 + 4.29*6 + 6.44*5 + 10.07*2.3) + (2*10 + 0*17.3)
 
 manual_budget_3 <- 0.7*4.8*4500*0.62*(1/748)
 manual_bill_3 <- 22 + 3.66*floor(manual_budget_3) + 6.33*(41 - floor(manual_budget_3) )

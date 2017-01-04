@@ -2,9 +2,10 @@
 #******************************************************************
 # Calculate the variable portion of a bill
 #******************************************************************
-calculate_variable_bill <- function(data, rate_type){
-  tier_start_str <- data$tier_starts[1]
-  tier_price_str <- data$tier_prices[1]
+calculate_variable_bill <- function(data, rate_type, start_name="tier_starts",
+                                    price_name="tier_prices", suffix=""){
+  tier_start_str <- data[[start_name]][1]
+  tier_price_str <- data[[price_name]][1]
 
   #call correct bill calculator function
   if(rate_type == "Tiered"){
@@ -12,14 +13,14 @@ calculate_variable_bill <- function(data, rate_type){
     tier_prices <- parse_numerics(tier_price_str)
     #check that prices are same length as tiers
     stopifnot(length(tier_starts)==length(tier_prices))
-    bill_info <- calculate_tiered_charge(data, tier_starts, tier_prices)
+    bill_info <- calculate_tiered_charge(data, tier_starts, tier_prices, suffix=suffix)
   }
   else if(rate_type == "Budget"){
     tier_starts <- get_budget_tiers(data, parse_strings(tier_start_str))
     tier_prices <- parse_numerics(tier_price_str )
     #check that prices are same length as tiers
     stopifnot(ncol(tier_starts)==length(tier_prices))
-    bill_info <- calculate_tiered_charge(data, tier_starts, tier_prices, budget_based=TRUE)
+    bill_info <- calculate_tiered_charge(data, tier_starts, tier_prices, budget_based=TRUE, suffix=suffix)
   }
 
   return(bill_info)
@@ -36,12 +37,14 @@ calculate_flat_charge <- function(data, price){
 #******************************************************************
 # Calculate a tiered usage charge
 #******************************************************************
-calculate_tiered_charge <- function(data, tier_starts, tier_prices, budget_based=FALSE){
+calculate_tiered_charge <- function(data, tier_starts, tier_prices, budget_based=FALSE, suffix=""){
   usage_in_tiers <- get_usage_in_tiers(data, tier_starts, budget_based=budget_based)
   revenue_in_tiers <- t(tier_prices*t(usage_in_tiers))
 
-  #change name of revenue columns to XR#
-  colnames(revenue_in_tiers) <- c( paste("XR", 1:ncol(revenue_in_tiers), sep="") )
+  #change name of usage columns to X#{suffix}
+  colnames(usage_in_tiers) <- c( paste("X", 1:ncol(usage_in_tiers), suffix, sep="") )
+  #change name of revenue columns to XR#{suffix}
+  colnames(revenue_in_tiers) <- c( paste("XR", 1:ncol(revenue_in_tiers), suffix, sep="") )
   usage_in_tiers <- tbl_df(data.frame(usage_in_tiers, revenue_in_tiers, variable_bill=usage_in_tiers%*%tier_prices))
   return(usage_in_tiers)
 }

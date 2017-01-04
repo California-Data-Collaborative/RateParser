@@ -90,13 +90,24 @@ add_rate_part_to_frame <- function(df, name, name_list, class_rate, cust_class){
     }
     else if(is_rate_type(rate_part)){
 
-      stopif(!(("tier_starts" %in% names(df))&&("tier_prices" %in% names(df))),
-             paste0("Either tier_starts or tier_prices is not present in the ", cust_class,
-                    " rate structure, or they could appear afterwards."))
-
       rate_type <- rate_part
-      variable_bills <- df %>% group_by(tier_starts, tier_prices) %>%
-        do(calculate_variable_bill(., rate_type))
+
+      if(name=="commodity_charge"){
+        stopif(!(("tier_starts" %in% names(df))&&("tier_prices" %in% names(df))),
+               paste0("Either tier_starts or tier_prices is not present in the ", cust_class,
+                      " rate structure, or they could appear afterwards."))
+        variable_bills <- df %>% group_by(tier_starts, tier_prices) %>%
+          do(calculate_variable_bill(., rate_type))
+
+      }else if(name=="sewer_charge"){
+        stopif(!(("sewer_tier_starts" %in% names(df))&&("sewer_tier_prices" %in% names(df))),
+               paste0("Either sewer_tier_starts or sewer_tier_prices is not present in the ", cust_class,
+                      " rate structure, or they could appear afterwards."))
+        variable_bills <- df %>% group_by(sewer_tier_starts, sewer_tier_prices) %>%
+          do(calculate_variable_bill(., rate_type, start_name="sewer_tier_starts",
+                                     price_name="sewer_tier_prices", suffix="_sewer"))
+      }
+
       #rename the column
       names(variable_bills)[names(variable_bills)=="variable_bill"] <- name
       df <- bind_cols( df, variable_bills )
