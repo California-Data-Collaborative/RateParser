@@ -70,7 +70,9 @@ calculate_class_bill <- function(df, parsed_rate){
   return(df)
 }
 
-
+#' Evaluate a rate part and add to the dataframe.
+#'
+#' @importFrom dplyr %>% tbl_df group_by do bind_cols ungroup select
 add_rate_part_to_frame <- function(df, name, name_list, class_rate, cust_class){
   rate_part <- class_rate[[name]]
 
@@ -97,7 +99,8 @@ add_rate_part_to_frame <- function(df, name, name_list, class_rate, cust_class){
                paste0("Either tier_starts or tier_prices is not present in the ", cust_class,
                       " rate structure, or they could appear afterwards."))
         variable_bills <- df %>% group_by(tier_starts, tier_prices) %>%
-          do(calculate_variable_bill(., rate_type))
+          do(calculate_variable_bill(., rate_type)) %>%
+          ungroup() %>% select(-tier_starts, -tier_prices)
 
       }else if(name=="sewer_charge"){
         stopif(!(("sewer_tier_starts" %in% names(df))&&("sewer_tier_prices" %in% names(df))),
@@ -105,7 +108,8 @@ add_rate_part_to_frame <- function(df, name, name_list, class_rate, cust_class){
                       " rate structure, or they could appear afterwards."))
         variable_bills <- df %>% group_by(sewer_tier_starts, sewer_tier_prices) %>%
           do(calculate_variable_bill(., rate_type, start_name="sewer_tier_starts",
-                                     price_name="sewer_tier_prices", is_sewer=TRUE))
+                                     price_name="sewer_tier_prices", is_sewer=TRUE)) %>%
+          ungroup() %>% select(-sewer_tier_starts, -sewer_tier_prices)
       }
 
       #rename the column
