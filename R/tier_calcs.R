@@ -29,13 +29,6 @@ calculate_variable_bill <- function(data, rate_type, start_name="tier_starts",
   return(bill_info)
 }
 
-#******************************************************************
-# Calculate a flat rate usage charge
-#******************************************************************
-calculate_flat_charge <- function(data, price){
-  tmp <- tbl_df(data.frame(X1=data$usage_ccf, XR1= data$usage_ccf*price ,variable_bill=data$usage_ccf*price))
-  return(tmp)
-}
 
 #******************************************************************
 # Calculate a tiered usage charge
