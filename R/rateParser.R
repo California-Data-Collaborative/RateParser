@@ -105,7 +105,7 @@ add_rate_part_to_frame <- function(df, name, name_list, class_rate, cust_class){
                       " rate structure, or they could appear afterwards."))
         variable_bills <- df %>% group_by(sewer_tier_starts, sewer_tier_prices) %>%
           do(calculate_variable_bill(., rate_type, start_name="sewer_tier_starts",
-                                     price_name="sewer_tier_prices", suffix="_sewer"))
+                                     price_name="sewer_tier_prices", is_sewer=TRUE))
       }
 
       #rename the column

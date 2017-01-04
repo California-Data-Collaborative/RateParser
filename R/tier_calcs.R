@@ -3,7 +3,10 @@
 # Calculate the variable portion of a bill
 #******************************************************************
 calculate_variable_bill <- function(data, rate_type, start_name="tier_starts",
-                                    price_name="tier_prices", suffix=""){
+                                    price_name="tier_prices", is_sewer=FALSE){
+  if(is_sewer){budget_col <- "sewer_budget"}
+  else{budget_col <- "budget"}
+
   tier_start_str <- data[[start_name]][1]
   tier_price_str <- data[[price_name]][1]
 
@@ -13,14 +16,14 @@ calculate_variable_bill <- function(data, rate_type, start_name="tier_starts",
     tier_prices <- parse_numerics(tier_price_str)
     #check that prices are same length as tiers
     stopifnot(length(tier_starts)==length(tier_prices))
-    bill_info <- calculate_tiered_charge(data, tier_starts, tier_prices, suffix=suffix)
+    bill_info <- calculate_tiered_charge(data, tier_starts, tier_prices, is_sewer=is_sewer)
   }
   else if(rate_type == "Budget"){
-    tier_starts <- get_budget_tiers(data, parse_strings(tier_start_str))
+    tier_starts <- get_budget_tiers(data, parse_strings(tier_start_str), budget_col=budget_col)
     tier_prices <- parse_numerics(tier_price_str )
     #check that prices are same length as tiers
     stopifnot(ncol(tier_starts)==length(tier_prices))
-    bill_info <- calculate_tiered_charge(data, tier_starts, tier_prices, budget_based=TRUE, suffix=suffix)
+    bill_info <- calculate_tiered_charge(data, tier_starts, tier_prices, budget_based=TRUE, is_sewer=is_sewer)
   }
 
   return(bill_info)
@@ -37,7 +40,10 @@ calculate_flat_charge <- function(data, price){
 #******************************************************************
 # Calculate a tiered usage charge
 #******************************************************************
-calculate_tiered_charge <- function(data, tier_starts, tier_prices, budget_based=FALSE, suffix=""){
+calculate_tiered_charge <- function(data, tier_starts, tier_prices, budget_based=FALSE, is_sewer=FALSE){
+  if(is_sewer){suffix <- "_sewer"}
+  else{suffix <- ""}
+
   usage_in_tiers <- get_usage_in_tiers(data, tier_starts, budget_based=budget_based)
   revenue_in_tiers <- t(tier_prices*t(usage_in_tiers))
 
@@ -117,8 +123,8 @@ parse_numerics <- function(str){
 # and converts them to a matrix of CCF tier starting values for
 # each customer.
 #******************************************************************
-get_budget_tiers <- function(data, tier_start_strs){
-  budget <- data$budget
+get_budget_tiers <- function(data, tier_start_strs, budget_col){
+  budget <- data[[budget_col]]
   budget_tiers <- matrix(0, nrow(data), length(tier_start_strs))
 
   for(i in 1:length(tier_start_strs)){

@@ -172,7 +172,15 @@ rate_structure:
           - 3.66
           - 6.33
     commodity_charge: Tiered
-    bill: commodity_charge + service_charge
+    sewer_budget: 10
+    sewer_tier_starts:
+      - 0
+      - 101%
+    sewer_tier_prices:
+      - 2
+      - 0
+    sewer_charge: Budget
+    bill: commodity_charge + service_charge + sewer_charge
   ERROR_CLASS1:
     tier_prices:
       depends_on: water_type
@@ -241,7 +249,7 @@ calc <- function(df){
   calculate_class_bill(df, test_rates)
 }
 
-manual_bill_1 <- 33 + 4.07*388
+manual_bill_1 <- 33 + (4.07*388) + (2*10 + 0*378)
 manual_bill_2 <- 11 + (2.87*14 + 4.29*6 + 6.44*5 + 10.07*2.3) + (2*10 + 0*17.3)
 
 manual_budget_3 <- 0.7*4.8*4500*0.62*(1/748)
