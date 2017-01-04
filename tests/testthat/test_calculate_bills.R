@@ -89,10 +89,10 @@ rate_structure:
     sewer_tier_starts:
       - 0
       - 11
+    sewer_charge: Tiered
     sewer_tier_prices:
       - 2
       - 0
-    sewer_charge: Tiered
     bill: commodity_charge + service_charge + sewer_charge
   RESIDENTIAL_BUDGETBASED:
     service_charge:
@@ -127,9 +127,7 @@ rate_structure:
         1": 22
         3": 33
     budget: outdoor
-    tier_starts:
-      - 0
-      - outdoor
+    commodity_charge: Budget
     tier_prices:
       depends_on: water_type
       values:
@@ -139,7 +137,9 @@ rate_structure:
         RECYCLED:
           - 3.66
           - 6.33
-    commodity_charge: Budget
+    tier_starts:
+      - 0
+      - outdoor
     bill: commodity_charge + service_charge + sewer_charge
     outdoor: et_factor * irrigable_area * et_amount * 0.62 * (1/748)
     et_factor: 0.7
@@ -282,11 +282,7 @@ test_that("Error thrown when a class is not defined in rate file", {
 })
 
 test_that("Error thrown when tier starts or prices are not present in a tiered rate structure", {
-  expect_error(calc(as.data.frame(rows[[5]])), "Either tier_starts or tier_prices is not present in the")
-})
-
-test_that("Error thrown when tier starts or prices appear after commodity_charge", {
-  expect_error(calc(as.data.frame(rows[[6]])), "or they could appear afterwards.")
+  expect_error(calc(as.data.frame(rows[[5]])), "is not present in the OWRS file for customer class")
 })
 
 test_that("Error thrown when a field is missing", {
