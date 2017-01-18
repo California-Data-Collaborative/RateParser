@@ -21,7 +21,7 @@ Getting Started
 
 This section demonstrates how to apply RateParser to calculate water bills given a dataframe of publicly available [billing data](https://data.smgov.net/Public-Services/Water-Usage/4nnq-5vzx) from the City of Santa Monica.
 
-First we load the RateParser package and read in the example OWRS file.
+First we load the RateParser package and read in the example OWRS file. The example OWRS file for the city of Santa Monica can be downloaded directly from [this link](https://raw.githubusercontent.com/California-Data-Collaborative/RateParser/master/examples/smc-2016-03-01.owrs) (right-click, Save as...) or can be found in the `examples` directory if this repository is downloaded or cloned.
 
 ``` r
 library(RateParser)
