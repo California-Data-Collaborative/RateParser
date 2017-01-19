@@ -60,6 +60,13 @@ rows[[8]] <- list("usage_ccf"=27.3,
                   "et_amount"=4.8,
                   "irrigable_area"=1300,
                   "hhsize"=3)
+rows[[9]] <- list("usage_ccf"=27.3,
+                  "meter_size"='5/8"',
+                  "cust_class"="ERROR_CLASS4",
+                  "water_type"="POTABLE",
+                  "et_amount"=4.8,
+                  "irrigable_area"=1300,
+                  "hhsize"=3)
 df_test <- do.call(rbind.data.frame, rows[1:3])
 
 yaml_rates <- '
@@ -110,14 +117,14 @@ rate_structure:
     tier_starts:
       - 0
       - indoor
-      - 100%
-      - 125%
+      - 101%
+      - 126%
     tier_prices:
       - 2.87
       - 4.29
       - 6.44
       - 10.07
-    commodity_charge: Tiered
+    commodity_charge: Budget
     bill: commodity_charge + service_charge
   IRRIGATION:
     service_charge:
@@ -242,6 +249,15 @@ rate_structure:
         - 6.33
     commodity_charge: Tiered
     bill: commodity_charge + service_charge
+  ERROR_CLASS4:
+    tier_starts:
+      - 0
+      - 101%
+    tier_prices:
+      - 4.07
+      - 10.03
+    commodity_charge: Tiered
+    bill: commodity_charge
 '
 test_rates <- yaml.load(yaml_rates)
 
@@ -253,15 +269,16 @@ calc <- function(df){
 manual_bill_1 <- 33 + (4.07*388) + (2*10 + 0*378)
 manual_bill_2 <- 11 + (2.87*14 + 4.29*6 + 6.44*5 + 10.07*2.3) + (2*10 + 0*17.3)
 
-manual_budget_3 <- 0.7*4.8*4500*0.62*(1/748)
-manual_bill_3 <- 22 + 3.66*floor(manual_budget_3) + 6.33*(41 - floor(manual_budget_3) ) + 1.5*41
+manual_budget_3 <- round(0.7*4.8*4500*0.62*(1/748))
+manual_bill_3 <- 22 + 3.66*manual_budget_3 + 6.33*(41 - manual_budget_3 ) + 1.5*41
 
-# manual_indoor_8 <- 60*3*30.4*(1/748)
-# manual_outdoor_8 <- 0.7 * 1300 * 4.8 * 0.62 * (1/748)
-# manual_budget_8 <- manual_indoor_8 + manual_outdoor_8
-# manual_bill_8 <- 11 + 2.87*floor(manual_indoor) +
-#                   4.29*floor(manual_outdoor) +
-#                   6.44*floor(1.25*manual_budget_8 - manual_budget_8) + 10.07*(27.3-1.25*manual_budget_8)
+manual_indoor_8 <- round(60*3*30.4*(1/748))
+manual_outdoor_8 <- round(0.7 * 1300 * 4.8 * 0.62 * (1/748))
+manual_budget_8 <- round(manual_indoor_8 + manual_outdoor_8)
+manual_bill_8 <- 11 + 2.87*manual_indoor_8 +
+                  4.29*manual_outdoor_8 +
+                  6.44*(round(1.26*manual_budget_8) - manual_budget_8) +
+                  10.07*(27.3-round(1.26*manual_budget_8))
 
 manual_bills <- c(manual_bill_1, manual_bill_2, manual_bill_3)
 
@@ -270,7 +287,7 @@ test_that("Individual bills calculated accurately", {
  expect_equal(calc(as.data.frame(rows[[1]]))$bill, manual_bill_1)
  expect_equal(calc(as.data.frame(rows[[2]]))$bill, manual_bill_2)
  expect_equal(calc(as.data.frame(rows[[3]]))$bill, manual_bill_3)
- # expect_equal(calc(as.data.frame(rows[[8]]))$bill, manual_bill_8)
+ expect_equal(calc(as.data.frame(rows[[8]]))$bill, manual_bill_8)
 })
 
 test_that("Bills accurate when summed accross customer classes", {
@@ -287,6 +304,10 @@ test_that("Error thrown when tier starts or prices are not present in a tiered r
 
 test_that("Error thrown when a field is missing", {
   expect_error(calc(as.data.frame(rows[[7]])), "is not present in the OWRS file for customer class")
+})
+
+test_that("Error thrown when % tiers used in 'Tiered' rate", {
+  expect_error(calc(as.data.frame(rows[[9]])), "Tiers are formatted for budget-based rates")
 })
 
 

@@ -117,7 +117,7 @@ add_rate_part_to_frame <- function(df, name, name_list, class_rate, cust_class){
       df <- bind_cols( df, variable_bills )
     }
     else{
-      df[[name]] <- eval_field_or_formula(df, rate_part)
+      df[[name]] <- eval_field_or_formula(df, name, rate_part)
     }
 
     return(df)
@@ -181,6 +181,7 @@ read_owrs_file <- function(filepath){
 #' the provided dataframe.
 #'
 #' @param df Data frame containing all data values referenced in field or formula.
+#' @param name Name of the rate part
 #' @param rate_part List representing a portion of a rate structure, defined in the
 #' \href{https://github.com/California-Data-Collaborative/Open-Water-Rate-Specification}{OWRS file}
 #'
@@ -188,7 +189,23 @@ read_owrs_file <- function(filepath){
 #' evaluating a field or formula in the context of the dataframe.
 #'
 #' @keywords internal
-eval_field_or_formula <- function(df, rate_part){
+eval_field_or_formula <- function(df, name, rate_part){
+  #if field/formula represent a budget, we round each of the budget components
+  if(grepl("budget", name)){
+    rate_part <- gsub("\\+", " + ", rate_part)
+    rate_part <- gsub("\\*", " * ", rate_part)
+    rate_part <- gsub("\\^", " ^ ", rate_part)
+
+    ls <- unlist(strsplit(rate_part, " +"))
+    for(i in 1:length(ls)){
+      s <- ls[i]
+      if(!(s %in% c("+","*","^")))
+        ls[i] <- paste("round(",s,")")
+    }
+    rate_part <- paste(ls, collapse=" ")
+  }
+
+
   return(eval(parse(text=rate_part), df))
 }
 

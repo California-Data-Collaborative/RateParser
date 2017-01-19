@@ -4,10 +4,12 @@
 \alias{eval_field_or_formula}
 \title{Evaluate a field or formula.}
 \usage{
-eval_field_or_formula(df, rate_part)
+eval_field_or_formula(df, name, rate_part)
 }
 \arguments{
 \item{df}{Data frame containing all data values referenced in field or formula.}
+
+\item{name}{Name of the rate part}
 
 \item{rate_part}{List representing a portion of a rate structure, defined in the
 \href{https://github.com/California-Data-Collaborative/Open-Water-Rate-Specification}{OWRS file}}

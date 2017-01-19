@@ -12,6 +12,10 @@ calculate_variable_bill <- function(data, rate_type, start_name="tier_starts",
 
   #call correct bill calculator function
   if(rate_type == "Tiered"){
+    stopif(grepl("%", tier_start_str),
+           paste("Tiers are formatted for budget-based rates, but commodity_charge is set to 'Tiered'.",
+                 "Please set 'commodity_charge: Budget' or change your tier_starts to billing units."))
+
     tier_starts <- parse_numerics(tier_start_str)
     tier_prices <- parse_numerics(tier_price_str)
     #check that prices are same length as tiers
@@ -69,7 +73,7 @@ get_usage_in_tiers <- function(data, tier_starts, budget_based=FALSE){
   for(i in 1:(num_tiers-1) ){
     # tier_stars is a matrix if budget, else is a vector
     if(budget_based){
-      t <- ceiling( tier_starts[,i+1] )
+      t <- tier_starts[,i+1] + 1
     }
     else{
       t <- tier_starts[i+1]
@@ -128,16 +132,16 @@ get_budget_tiers <- function(data, tier_start_strs, budget_col){
       budget_tiers[,i] <- suppressWarnings(as.numeric(t))
     }
     else if(tolower(t) == "indoor"){
-      budget_tiers[,i] <- data$indoor
+      budget_tiers[,i] <- round(data$indoor)
     }
     else if(tolower(t) == "outdoor"){
-      budget_tiers[,i] <- data$outdoor
+      budget_tiers[,i] <- round(data$outdoor)
     }
     else if( grepl("%", t) ){
       percent <- as.numeric( gsub("[^0-9\\.]", "", t, "") )
       stopifnot(is.finite(percent))
 
-      budget_tiers[,i] <- (percent/100)*budget
+      budget_tiers[,i] <- round((percent/100)*budget)
     }
   }
 
