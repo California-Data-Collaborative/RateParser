@@ -97,6 +97,7 @@ add_rate_part_to_frame <- function(df, name, name_list, class_rate, cust_class){
       if(name=="commodity_charge"){
         stopif(!(("tier_starts" %in% names(df))), "object 'tier_starts' not found")
         stopif(!(("tier_prices" %in% names(df))), "object 'tier_prices' not found")
+        stopif(!(("budget" %in% names(df)))&&rate_type=='Budget', "object 'budget' not found")
 
         variable_bills <- df %>% group_by(tier_starts, tier_prices) %>%
           do(calculate_variable_bill(., rate_type)) %>%
