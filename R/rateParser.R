@@ -254,14 +254,21 @@ eval_map <- function(df, rate_part){
   stopif( check, paste0("One of the fields (", rate_part$depends_on, ") is not present.",
                         " It can be defined either in the data or in the rate file.") )
 
-  # Appened together each element in the dependency columns
+  # Append together each element in the dependency columns
   keys <- do.call(paste, c(df[rate_part$depends_on], sep = "|"))
 
   # Get the value mapping, and flatten together in the case of tiers
   pricemap <- rate_part$values
   pricemap <- collapse_tiers(pricemap)
+  results <- unname(unlist(pricemap)[keys])
 
-  return( unname(unlist(pricemap)[keys]) )
+  nonmaps <- unique(keys[is.na(results)])
+  valid_nas <- c("", "NA")
+  check <- any(!(nonmaps %in%  valid_nas))
+  stopif(check, paste0("The following map keys are missing from the OWRS file: (",
+                       paste(nonmaps[!(nonmaps %in% valid_nas)], collapse = ", "), ")") )
+
+  return( results )
 }
 
 #' Check whether a rate part is a map.
