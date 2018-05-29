@@ -19,14 +19,20 @@ calculate_variable_bill <- function(data, rate_type, start_name="tier_starts",
     tier_starts <- parse_numerics(tier_start_str)
     tier_prices <- parse_numerics(tier_price_str)
     #check that prices are same length as tiers
-    stopifnot(length(tier_starts)==length(tier_prices))
+    if(length(tier_starts)!=length(tier_prices)){
+      stop("Length of tier_starts and tier_prices is not equal. This could also be 
+           caused by a uniform rate specified without the flat_rate field.")
+    }
     bill_info <- calculate_tiered_charge(data, tier_starts, tier_prices, is_sewer=is_sewer)
   }
   else if(rate_type == "Budget"){
     tier_starts <- get_budget_tiers(data, parse_strings(tier_start_str), budget_col=budget_col)
     tier_prices <- parse_numerics(tier_price_str )
     #check that prices are same length as tiers
-    stopifnot(ncol(tier_starts)==length(tier_prices))
+    if(ncol(tier_starts)!=length(tier_prices)){
+      stop("Length of tier_starts and tier_prices is not equal. This could also be 
+           caused by a uniform rate specified without the flat_rate field.")
+    }
     bill_info <- calculate_tiered_charge(data, tier_starts, tier_prices, budget_based=TRUE, is_sewer=is_sewer)
   }
 
@@ -140,7 +146,6 @@ get_budget_tiers <- function(data, tier_start_strs, budget_col){
     else if( grepl("%", t) ){
       percent <- as.numeric( gsub("[^0-9\\.]", "", t, "") )
       stopifnot(is.finite(percent))
-
       budget_tiers[,i] <- round((percent/100)*budget)
     }
   }
